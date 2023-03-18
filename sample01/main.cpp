@@ -61,10 +61,12 @@ int BackBufferWidth = 0;
 int BackBufferHeight = 0;
 
 #define TEXTURE_PATH_BRICK L"brick.png"
+#define TEXTURE_PATH_BALL L"poolball.png"
 #define BRICK_START_X 8.0f
 #define BRICK_START_Y 200.0f
 
 #define BRICK_START_VX 0.2f
+#define BRICK_START_VY 0.2f
 
 #define BRICK_WIDTH 16.0f
 #define BRICK_HEIGHT 16.0f
@@ -77,6 +79,7 @@ D3DX10_SPRITE spriteBrick;
 
 float brick_x = BRICK_START_X;
 float brick_vx = BRICK_START_VX;
+float brick_vy = BRICK_START_VY;
 float brick_y = BRICK_START_Y;
 
 
@@ -273,7 +276,8 @@ void LoadResources()
 
 	// Loads the texture into a temporary ID3D10Resource object
 	HRESULT hr = D3DX10CreateTextureFromFile(pD3DDevice,
-		TEXTURE_PATH_BRICK,
+		//TEXTURE_PATH_BRICK,
+		TEXTURE_PATH_BALL,
 		NULL,
 		NULL,
 		&pD3D10Resource,
@@ -345,38 +349,37 @@ void LoadResources()
 void Update(DWORD dt)
 {
 	//Uncomment the whole function to see the brick moves and bounces back when hitting left and right edges
-	//brick_x++;
-
-	//brick_x += brick_vx*dt; 
-
+		
+	brick_x += brick_vx * dt; 
+	brick_y += brick_vy * dt;
+	
 	// NOTE: BackBufferWidth is indeed related to rendering!!
-	//float right_edge = BackBufferWidth - BRICK_WIDTH;
-
-	//if (brick_x < 0 || brick_x > right_edge) {
-
-		//brick_vx = -brick_vx;
-
-		//	//Why not having these logics would make the brick disappear sometimes?  
-		////	if (brick_x < 0)
-		////	{
-		////		brick_x = 0;
-		////	}
-		////	else if (brick_x > right_edge )
-		////	{
-		////		brick_x = right_edge;
-		////	}
-	//}
-
-	brick_y += brick_vx * dt;
-	brick_x = BackBufferWidth / 2;
-
-	// NOTE: BackBufferWidth is indeed related to rendering!!
+	
 	float bottom_edge = BackBufferHeight - BRICK_HEIGHT;
+	float right_edge = BackBufferWidth - BRICK_WIDTH;
 
+	if (brick_x < 0 || brick_x > right_edge) {
+
+		brick_vx = -brick_vx;		
+	}
 	if (brick_y < 0 || brick_y > bottom_edge) {
 
-		brick_vx = -brick_vx;
+		brick_vy = -brick_vy;
 	}
+	//Why not having these logics would make the brick disappear sometimes?  
+	//	////	if (brick_x < 0)
+	//	////	{
+	//	////		brick_x = 0;
+	//	////	}
+	//	////	else if (brick_x > right_edge )
+	//	////	{
+	//	////		brick_x = right_edge;
+	//	////	}
+	////}
+
+	
+
+	
 }
 
 /*
