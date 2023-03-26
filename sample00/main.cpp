@@ -36,8 +36,11 @@ WARNING: This one file example has a hell LOT of *sinful* programming practices
 #include <stdarg.h>
 #include <time.h>
 #include <stdlib.h>
+#include <cstdlib>
 
 #include <comdef.h>
+
+#include "Ball.h"
 
 #define WINDOW_CLASS_NAME L"SampleWindow"
 #define WINDOW_TITLE L"00 - Intro"
@@ -48,8 +51,12 @@ HWND hWnd = 0;
 // Each color is from 0.0f to 1.0f  ( 0/255 to 255/255 ) 
 #define BACKGROUND_COLOR D3DXCOLOR(0.2f, 0.2f, 0.2f, 0.2f)
 
+/*
 #define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+#define WINDOW_HEIGHT 480*/
+
+#define WINDOW_WIDTH 1240
+#define WINDOW_HEIGHT 680
 
 #define MAX_FRAME_RATE 100
 
@@ -62,8 +69,8 @@ int BackBufferHeight = 0;
 
 #define TEXTURE_PATH_BRICK L"brick.png"
 #define TEXTURE_PATH_BALL L"poolball.png"
-#define BRICK_START_X 8.0f
-#define BRICK_START_Y 200.0f
+#define BRICK_START_X  8.0f
+#define BRICK_START_Y 2.0f
 
 #define BRICK_START_VX 0.2f
 #define BRICK_START_VY 0.2f
@@ -82,7 +89,8 @@ float brick_vx = BRICK_START_VX;
 float brick_vy = BRICK_START_VY;
 float brick_y = BRICK_START_Y;
 
-
+Ball ballArray[1000];
+int numberOfBall = 1000;
 
 
 LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -260,8 +268,6 @@ void InitDirectX(HWND hWnd)
 	hr = spriteObject->SetProjectionTransform(&matProjection);
 
 
-
-
 	DebugOut((wchar_t*)L"[INFO] InitDirectX has been successful\n");
 
 	return;
@@ -282,17 +288,19 @@ void LoadResources()
 		NULL,
 		&pD3D10Resource,
 		NULL);
+	
 
 	// Make sure the texture was loaded successfully
 	if (FAILED(hr))
 	{
 		DebugOut((wchar_t*)L"[ERROR] Failed to load texture file: %s \n", TEXTURE_PATH_BRICK);
 		return;
-	}
-
+	}	
+	
 	// Translates the ID3D10Resource object into a ID3D10Texture2D object
 	pD3D10Resource->QueryInterface(__uuidof(ID3D10Texture2D), (LPVOID*)&texBrick);
 	pD3D10Resource->Release();
+		
 
 	if (!texBrick) {
 		DebugOut((wchar_t*)L"[ERROR] Failed to convert from ID3D10Resource to ID3D10Texture2D \n");
@@ -349,23 +357,28 @@ void LoadResources()
 void Update(DWORD dt)
 {
 	//Uncomment the whole function to see the brick moves and bounces back when hitting left and right edges
-		
+	/*
 	brick_x += brick_vx * dt; 
 	brick_y += brick_vy * dt;
-	
+	*/
 	// NOTE: BackBufferWidth is indeed related to rendering!!
-	
 	float bottom_edge = BackBufferHeight - BRICK_HEIGHT;
 	float right_edge = BackBufferWidth - BRICK_WIDTH;
-
-	if (brick_x < 0 || brick_x > right_edge) {
-
+	/*
+	if (brick_x < 0 || brick_x > right_edge) {		
 		brick_vx = -brick_vx;		
 	}
 	if (brick_y < 0 || brick_y > bottom_edge) {
 
 		brick_vy = -brick_vy;
+	}*/
+
+	for (int i = 0; i < numberOfBall; i++) {
+		ballArray[i].move(dt);
+		ballArray[i].changeDirection(bottom_edge, right_edge);
 	}
+
+
 	//Why not having these logics would make the brick disappear sometimes?  
 	//	////	if (brick_x < 0)
 	//	////	{
@@ -395,11 +408,35 @@ void Render()
 
 		// start drawing the sprites
 		spriteObject->Begin(D3DX10_SPRITE_SORT_TEXTURE);
+				
+		// The translation matrix to be created
+		D3DXMATRIX matTranslation;
+		// Scale the sprite to its correct width and height
+		D3DXMATRIX matScaling;
+		D3DXMatrixScaling(&matScaling, BRICK_WIDTH, BRICK_HEIGHT, 1.0f);
+		for (int i = 0; i < numberOfBall; i++) {
+			
+			// Create the translation matrix
+			D3DXMatrixTranslation(&matTranslation, ballArray[i].getX(), (BackBufferHeight - ballArray[i].getY()), 0.1f);
+			
+			
 
+			// Setting the sprite’s position and size
+			spriteBrick.matWorld = (matScaling * matTranslation);
+
+			spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);
+			
+		}
+		// Finish up and send the sprites to the hardware
+		spriteObject->End();
+		pSwapChain->Present(0, 0);
+
+		/*
 		// The translation matrix to be created
 		D3DXMATRIX matTranslation;
 		// Create the translation matrix
 		D3DXMatrixTranslation(&matTranslation, brick_x, (BackBufferHeight - brick_y), 0.1f);
+		
 
 		// Scale the sprite to its correct width and height
 		D3DXMATRIX matScaling;
@@ -408,7 +445,7 @@ void Render()
 		// Setting the sprite’s position and size
 		spriteBrick.matWorld = (matScaling * matTranslation);
 
-		spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);
+		spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);		
 
 		// Finish up and send the sprites to the hardware
 		spriteObject->End();
@@ -417,6 +454,7 @@ void Render()
 
 		// display the next item in the swap chain
 		pSwapChain->Present(0, 0);
+		*/
 	}
 }
 
@@ -545,7 +583,7 @@ int WINAPI WinMain(
 
 	InitDirectX(hWnd);
 
-	LoadResources();
+	LoadResources();	
 	Run();
 	Cleanup();
 
